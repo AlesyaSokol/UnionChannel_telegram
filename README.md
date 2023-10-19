@@ -20,16 +20,6 @@ Subscribe to the channels in the telegrams is not required.
       api_id = XXXX
       api_hash = "XXXXXXXXXXXXXXXXXXX"
       MyChannel = "XXXXXXXXXXXXXXXXXXXXXXXX" #link to your chat 
- 
-      ###          Bot-side:          ###
-      bot_token = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-      admin_chat_id = None       
-      channel_id = None
-
- Data like `admin_chat_id` and `channel_id` you can get with debug value ("None") and replace. Optional:
-
-        admin_chat_id = 12345       
-        channel_id = -1234567
 
 + List the channels from which you will forward in the file `channels.txt`
 
