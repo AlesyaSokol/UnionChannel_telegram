@@ -15,45 +15,38 @@ import SharedFunctions as sf
 import config
 
 
-def CheckSponsored(msg, KeyPharses):
+def CheckKeywords(msg, KeyPharses):
 
     try:
-        isAd = False
+        incl = False
         for Pharse in KeyPharses:
-            if msg.message.lower().find(Pharse)!=-1: 
-                isAd = True
-                logging.info("Message id " + str(msg.id) + " is Sponsored")
-        if (isAd == False):
+            if Pharse.lower() in msg.message.lower(): 
+                incl = True
+                logging.info("Message id " + str(msg.id) + " contains keyword")
+        if (incl == True):
             return msg
         else: 
             return None
     except:
         msg
 
-def OpenSponsored():
-    ads = sf.OpenJson(name="ads")
-    if ads["enable"]==1:
-        ads_list = list()
-        for ad in ads:
-            if ad == "enable:":
-                pass
-            else:
-                ads_list.append(ad)
-        return ads_list
-    else:
-        return None
+def OpenKeywords():
+    with open('../keywords.txt', 'r') as f:
+        keywords = f.readlines()
+    keywords = [c[:-1] for c in keywords]
+    return keywords
     
 
 
 
 def ForwardMsg(client, peer, msgMassive, MyChannel):
 
-    KeyPharse = OpenSponsored()
+    KeyPharse = OpenKeywords()
     messages_real = list()
 
     for msg in msgMassive:
         if KeyPharse != None:
-            NeedToAdd = CheckSponsored(msg, KeyPharse)
+            NeedToAdd = CheckKeywords(msg, KeyPharse)
             if NeedToAdd != None:
                 messages_real.append(msg)
         else:
@@ -146,7 +139,15 @@ def GetLastMsg(client, channel_id):
 
 
 def OpenUpdateTime():
-    return sf.OpenJson(name= "channels")
+    js = sf.OpenJson('channels')
+    with open('../channels.txt', 'r') as f:
+        channels = f.readlines()
+    channels = [c[:-1] for c in channels]
+    for c in channels:
+        if not c in js.keys():
+            js[c] = 0
+    sf.SaveJson('channels', js)
+    return js
 
 def SaveUpdateTime(key, LastMsg_id):
     channels = sf.OpenJson(name= "channels")
