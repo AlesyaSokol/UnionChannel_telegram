@@ -106,7 +106,7 @@ def SendGroupped(client, peer, grupped_ids, MyChannel):
             id = grupped_ids,
             to_peer = MyChannel,
             with_my_score = True,
-            grouped = True
+#             grouped = True
         ))
     return grupped_ids
 
@@ -201,6 +201,7 @@ def main(client):
             print("(2) channels[channel_id]: " + str(channels[channel_id]) )
 
             if ( len(msg)> 0):
+                print('Forwarding messages: ', [msg[i].id for i in range(len(msg))])
                 LastMsg_id = ForwardMsg(client = client, peer = channel_id, msgMassive = msg, MyChannel = MyChannel)
                 channels[channel_id] = LastMsg_id
                 print("LastMsg_id: " + str(LastMsg_id) )
