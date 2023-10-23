@@ -146,8 +146,12 @@ def OpenUpdateTime():
     for c in channels:
         if not c in js.keys():
             js[c] = 0
-    sf.SaveJson('channels', js)
-    return js
+    js_new = {}
+    for k in js.keys():
+        if k in channels:
+            js_new[k] = js[k]
+    sf.SaveJson('channels', js_new)
+    return js_new
 
 def SaveUpdateTime(key, LastMsg_id):
     channels = sf.OpenJson(name= "channels")
@@ -179,21 +183,26 @@ def main(client):
     channels = OpenUpdateTime()
     MyChannel = config.MyChannel
     for channel_id in channels:
-        if (channels[channel_id] == 0):
-    
-            if channel_id.find("t.me/joinchat")!= -1:
-                ch = channel_id.split("/")
-                req = ch[len(ch)-1]
-                isCorrect = GheckCorrectlyprivateLink(client, req)
-                if not isCorrect:
-                    channels.pop(channel_id)
-                    print("Removing incorrect channel")
-                    break
-                Subs2PrivateChat(client, req)
+        try:
+            if (channels[channel_id] == 0):
 
-            LastMsg_id = GetLastMsg(client, channel_id)
-            SaveUpdateTime(key = channel_id, LastMsg_id = LastMsg_id)
-            channels = OpenUpdateTime()
+                if channel_id.find("t.me/joinchat")!= -1:
+                    ch = channel_id.split("/")
+                    req = ch[len(ch)-1]
+                    isCorrect = GheckCorrectlyprivateLink(client, req)
+                    if not isCorrect:
+                        channels.pop(channel_id)
+                        print("Removing incorrect channel")
+                        break
+                    Subs2PrivateChat(client, req)
+
+                LastMsg_id = GetLastMsg(client, channel_id)
+                SaveUpdateTime(key = channel_id, LastMsg_id = LastMsg_id)
+                channels = OpenUpdateTime()
+                SaveNewTime(channels)
+        except Exception as e:
+            print(str(e))
+            logging.error( str(e) )
         try:
             msg = GetHistory(client = client, min = channels[channel_id], channel_id = channel_id)
             print("(2) msg len: " + str( len(msg) ))
@@ -205,9 +214,11 @@ def main(client):
                 LastMsg_id = ForwardMsg(client = client, peer = channel_id, msgMassive = msg, MyChannel = MyChannel)
                 channels[channel_id] = LastMsg_id
                 print("LastMsg_id: " + str(LastMsg_id) )
+                SaveNewTime(channels)
                 needSave = True
             time.sleep(randint(5, 10))
         except Exception as e:
+            print(str(e))
             logging.error( str(e) )
     
     if needSave:
