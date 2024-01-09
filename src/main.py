@@ -16,19 +16,21 @@ import config
 
 
 def CheckKeywords(msg, KeyPharses):
+    return msg
 
-    try:
-        incl = False
-        for Pharse in KeyPharses:
-            if Pharse.lower() in msg.message.lower(): 
-                incl = True
-                logging.info("Message id " + str(msg.id) + " contains keyword")
-        if (incl == True):
-            return msg
-        else: 
-            return None
-    except:
-        msg
+#    try:
+#        incl = False
+#        for Pharse in KeyPharses:
+#            if Pharse.lower() in msg.message.lower(): 
+#                incl = True
+#                logging.info("Message id " + str(msg.id) + " contains keyword")
+#        if (incl == True):
+#            return msg
+#        else: 
+#            return None
+#    except:
+#        msg
+
 
 def OpenKeywords():
     with open('../keywords.txt', 'r') as f:
