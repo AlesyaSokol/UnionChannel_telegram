@@ -31,7 +31,6 @@ def CheckKeywords(msg, KeyPharses):
 #    except:
 #        msg
 
-
 def OpenKeywords():
     with open('../keywords.txt', 'r') as f:
         keywords = f.readlines()
@@ -87,6 +86,16 @@ def ForwardMsg(client, peer, msgMassive, MyChannel):
     return  msgMassive[0].id 
 
 
+def GetAccessHash(client, channel_id):
+    ah = sf.OpenJson('access_hash')
+    if channel_id in ah.keys():
+        return ah[channel_id]
+    else:
+        ch = client.get_input_entity(channel_id)
+        ah[channel_id] = [ch.channel_id, ch.access_hash]
+        sf.SaveJson('access_hash', ah)
+        return ah[channel_id]
+
 
 def CheckTRUE(_list):
     if len(_list) > 0:
@@ -95,21 +104,27 @@ def CheckTRUE(_list):
         return False
 
 def SendMsg(client, peer, msg_non_grupped, MyChannel):
-    client(functions.messages.ForwardMessagesRequest(
+    try:
+        client(functions.messages.ForwardMessagesRequest(
             from_peer = peer,
             id = msg_non_grupped,
             to_peer = MyChannel,
             with_my_score = True
-        ))
+            ))
+    except Exception as e:
+        logging.error( str(e) )
 
 def SendGroupped(client, peer, grupped_ids, MyChannel):
-    client(functions.messages.ForwardMessagesRequest(
+    try:
+        client(functions.messages.ForwardMessagesRequest(
             from_peer = peer,
             id = grupped_ids,
             to_peer = MyChannel,
             with_my_score = True,
 #             grouped = True
-        ))
+            ))
+    except Exception as e:
+        logging.error( str(e) )
     return grupped_ids
 
 def GetHistory(client, min, channel_id):
@@ -183,11 +198,13 @@ def Subs2PrivateChat(client, req):
 def main(client):
     needSave = False
     channels = OpenUpdateTime()
+    print(channels)
     MyChannel = config.MyChannel
     for channel_id in channels:
         try:
+            print(channel_id, channels[channel_id])
             if (channels[channel_id] == 0):
-
+    
                 if channel_id.find("t.me/joinchat")!= -1:
                     ch = channel_id.split("/")
                     req = ch[len(ch)-1]
@@ -197,20 +214,24 @@ def main(client):
                         print("Removing incorrect channel")
                         break
                     Subs2PrivateChat(client, req)
-
-                LastMsg_id = GetLastMsg(client, channel_id)
+                
+                channel_hash = GetAccessHash(client, channel_id)
+                channel_with_hash = types.InputPeerChannel(channel_id=channel_hash[0], access_hash=channel_hash[1])
+                LastMsg_id = GetLastMsg(client, channel_with_hash)
                 SaveUpdateTime(key = channel_id, LastMsg_id = LastMsg_id)
                 channels = OpenUpdateTime()
                 SaveNewTime(channels)
         except Exception as e:
-            print(str(e))
-            logging.error( str(e) )
+           print(str(e))
+           logging.error( str(e) )
         try:
-            msg = GetHistory(client = client, min = channels[channel_id], channel_id = channel_id)
+            channel_hash = GetAccessHash(client, channel_id)
+            channel_with_hash = types.InputPeerChannel(channel_id=channel_hash[0], access_hash=channel_hash[1])
+            msg = GetHistory(client = client, min = channels[channel_id], channel_id = channel_with_hash)
             print("(2) msg len: " + str( len(msg) ))
             print("(2) channels: " + str(channels) )
             print("(2) channels[channel_id]: " + str(channels[channel_id]) )
-
+    
             if ( len(msg)> 0):
                 print('Forwarding messages: ', [msg[i].id for i in range(len(msg))])
                 LastMsg_id = ForwardMsg(client = client, peer = channel_id, msgMassive = msg, MyChannel = MyChannel)
@@ -218,7 +239,7 @@ def main(client):
                 print("LastMsg_id: " + str(LastMsg_id) )
                 SaveNewTime(channels)
                 needSave = True
-            time.sleep(randint(5, 10))
+                time.sleep(randint(5, 10))
         except Exception as e:
             print(str(e))
             logging.error( str(e) )
